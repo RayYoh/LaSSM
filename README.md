@@ -22,9 +22,9 @@
 ## :floppy_disk: Trained Results
 | Model | Benchmark | Num GPUs | mAP | AP50 | AP25 | Config | Tensorboard | Exp Record | Model |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| LaSSM | ScanNet++ V2 Val | 4 | 29.1 | 43.5 | 51.6 | - | [Link](https://huggingface.co/RayYoh/LaSSM/tensorboard) | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannetpp-lassm-spunet-v2-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannetpp-lassm-spunet-v2-3/model/model_best.pth) |
-| LaSSM | ScanNet Val | 4 | 58.4 | 78.1 | 86.1 | - | - | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannet-lassm-spunet-v2-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannet-lassm-spunet-v2-3/model/model_best.pth) |
-| LaSSM | ScanNet200 Val | 4 | 29.3 | 39.2 | 44.5 | - | - | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannet200-lassm-minkunet-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannet200-lassm-minkunet-3/model/model_best.pth) |
+| LaSSM | ScanNet++ V2 Val | 4 | 29.1 | 43.5 | 51.6 | [Link](https://github.com/RayYoh/LaSSM/blob/main/configs/scannetpp/insseg-lassm-spunet-v2-3.py) | [Link](https://huggingface.co/RayYoh/LaSSM/tensorboard) | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannetpp-lassm-spunet-v2-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannetpp-lassm-spunet-v2-3/model/model_best.pth) |
+| LaSSM | ScanNet Val | 4 | 58.4 | 78.1 | 86.1 | [Link](https://github.com/RayYoh/LaSSM/blob/main/configs/scannet/insseg-lassm-spunet-v2-3.py) | - | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannet-lassm-spunet-v2-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannet-lassm-spunet-v2-3/model/model_best.pth) |
+| LaSSM | ScanNet200 Val | 4 | 29.3 | 39.2 | 44.5 | [Link](https://github.com/RayYoh/LaSSM/blob/main/configs/scannet200/insseg-lassm-minkunet-3.py) | - | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannet200-lassm-minkunet-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannet200-lassm-minkunet-3/model/model_best.pth) |
 
 
 ## :hammer: Installation
@@ -50,6 +50,8 @@ pip install torch-geometric
 # spconv (SparseUNet)
 # refer https://github.com/traveller59/spconv
 pip install spconv-cu117
+
+pip install transformers==4.44.0 mamba-ssm==2.0.4 causal-conv1d==1.2.0.post2
 ```
 Note that they also provide scripts to build correponding docker image: [build_image.sh](https://github.com/Pointcept/Pointcept/blob/main/scripts/build_image.sh)
 
@@ -102,20 +104,20 @@ Same to [Pointcept](https://github.com/Pointcept/Pointcept), the training proces
 
 **ScanNet V2, LaSSM**
 ```bash
-CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannet -c insseg-sm-spunet-v2-0 -n insseg-sm-spunet-v2-0
+CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannet -c insseg-lassm-spunet-v2-3 -n insseg-lassm-spunet-v2-3
 ```
 
 **ScanNet200, LaSSM**
 First download the pre-trained backbone from [Mask3D](https://github.com/JonasSchult/Mask3D) [Weight](https://github.com/oneformer3d/oneformer3d/releases/download/v1.0/mask3d_scannet200.pth), you can also use our provided weight [mask3d_scannet200](https://huggingface.co/RayYoh/SGIFormer/blob/main/mask3d_scannet200.pth).
 ```bash
-CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannet200 -c insseg-sm-minkunet-0 -n insseg-sm-minkunet-0
+CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannet200 -c insseg-lassm-minkunet-3 -n insseg-lassm-minkunet-3
 ```
 
 **ScanNet++ V2, LaSSM**
 ```bash
-CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannetpp -c insseg-sgiformer-spunet-v2 -n insseg-sgiformer-spunet-v2
+CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannetpp -c insseg-lassm-spunet-v2-3 -n insseg-lassm-spunet-v2-3
 ```
-**Note**: we load the model pre-trained on ScanNet V2, you need to train ScanNet V2 first or use our provided weight [insseg-scannet-sgiformer-spunet](https://huggingface.co/RayYoh/SGIFormer/tree/main/insseg-scannet-sgiformer-spunet).
+**Note**: we load the model pre-trained on ScanNet V2, you need to train ScanNet V2 first or use our provided weight [scannet-lassm-spunet-v2-3](https://huggingface.co/RayYoh/LaSSM/blob/main/scannet-lassm-spunet-v2-3/model/model_best.pth).
 
 
 ## :books: License
