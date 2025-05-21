@@ -7,7 +7,6 @@ from collections.abc import Sequence
 
 from pointcept.utils.cache import shared_dict
 from pointcept.datasets.scannet import ScanNetDataset
-from pointcept.datasets.s3dis import S3DISDataset
 from pointcept.datasets.scannetpp import ScanNetPPDataset
 from pointcept.datasets.builder import DATASETS
 
@@ -404,26 +403,5 @@ class ScanNetPPSpDataset(ScanNetPPDataset):
             data_dict=data_dict, segment=segment, 
             instance=instance, name=self.get_data_name(idx)
         )
-        return data_dict
-    
-
-@DATASETS.register_module()
-class S3DISSpDataset(S3DISDataset):    
-    def get_data_name(self, idx):
-        remain, room_name = os.path.split(self.data_list[idx % len(self.data_list)])
-        remain, area_name = os.path.split(remain)
-        return f"{area_name}_{room_name}"
-    
-    def get_data(self, idx):
-        data_dict = super(S3DISSpDataset, self).get_data(idx)
-        scan_id = self.get_data_name(idx)
-        superpoint = torch.load(
-            os.path.join(self.data_root, "superpoints_new", scan_id + ".pth")
-        )
-        if len(superpoint) != data_dict["coord"].shape[0]:
-            raise ValueError(
-                f"{scan_id} Superpoint size {len(superpoint)} does not match coord size {data_dict['coord'].shape[0]}"
-            )
-        data_dict["superpoint"] = superpoint.astype(np.int32)
         return data_dict
     

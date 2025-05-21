@@ -891,7 +891,7 @@ class Mask3DShiftT(object):
 
 
 @TRANSFORMS.register_module()
-class Of3DGridSampleT(object):
+class CustomGridSampleT(object):
     def __init__(
         self,
         grid_size=0.05,
@@ -1039,7 +1039,7 @@ class Of3DGridSampleT(object):
 
 
 @TRANSFORMS.register_module()
-class Of3DGridSampleT_(Of3DGridSampleT):
+class CustomGridSampleT_(CustomGridSampleT):
     def __call__(self, data_dict):
         assert "elastic_coord" in data_dict.keys()
         device = data_dict["elastic_coord"].device
@@ -1128,7 +1128,7 @@ class Of3DGridSampleT_(Of3DGridSampleT):
     
 
 @TRANSFORMS.register_module()
-class Of3DElasticDistortionT(object):
+class CustomElasticDistortionT(object):
     def __init__(self, grid_size=0.02, distortion_params=None, p=0.5):
         self.grid_size = grid_size
         self.distortion_params = (
@@ -1191,7 +1191,7 @@ class Of3DElasticDistortionT(object):
     
 
 @TRANSFORMS.register_module()
-class Of3DTranslationT(object):
+class RandomTranslationT(object):
     def __init__(self, shift=(0.1, 0.1, 0.1)):
         self.shift = shift
 

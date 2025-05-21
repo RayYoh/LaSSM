@@ -1,31 +1,30 @@
 <div align="center">
 
-# SceneMamba: A Memory-Efficient Query Decoder with Position-Guided State Space Models for 3D Scene Instance Segmentation
+# LaSSM: Efficient Semantic-Spatial Query Decoding via Local Aggregation and State Space Models for 3D Instance Segmentation
+[Lei Yao](https://rayyoh.github.io/), [Yi Wang](https://wangyintu.github.io/), [Yawen Cui](https://scholar.google.com/citations?hl=zh-CN&user=Er0gOskAAAAJ&view_op=list_works&sortby=pubdate), [Moyun Liu](https://lmomoy.github.io/), [Lap-Pui Chau](https://www.eie.polyu.edu.hk/~lpchau/)
 
 [![python](https://img.shields.io/badge/-Python_3.8-blue?logo=python&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Static Badge](https://img.shields.io/badge/Weights-grey?style=plastic&logo=huggingface&logoColor=yellow)](https://huggingface.co/RayYoh/LaSSM)
 [![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](LICENSE)
 
-[**Project Page**](https://rayyoh.github.io/SceneMamba/) | [**Weights**](https://huggingface.co/RayYoh/SceneMamba)
 
 </div>
 
 ## :memo: To-Do List
-- [ ] Release trained weights and experiment record.
+- [x] Release trained weights and experiment record.
 - [x] Installation instructions.
 - [x] Processing datasets.
 - [ ] Release training configs.
-- [ ] Release training code.
+- [x] Release training code.
 
 
 
 ## :floppy_disk: Trained Results
-| Model | Benchmark | Num GPUs | mAP | AP50 | Config | Tensorboard | Exp Record | Model |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| SceneMamba | ScanNet++ V2 Val | 4 | x | x | x | x | x  |
-| SceneMamba | ScanNet Val | 4 | x | x  | x | - | x | x |
-| SceneMamba-L | ScanNet Val | 4 | x | x | x | - | x | x |
-| SceneMamba | ScanNet200 Val | 4 | x | x  | x | - | x | x |
-| SceneMamba-L | ScanNet200 Val | 4 | x | x | x  | - | x | x |
+| Model | Benchmark | Num GPUs | mAP | AP50 | AP25 | Config | Tensorboard | Exp Record | Model |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| LaSSM | ScanNet++ V2 Val | 4 | 29.1 | 43.5 | 51.6 | - | [Link](https://huggingface.co/RayYoh/LaSSM/tensorboard) | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannetpp-lassm-spunet-v2-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannetpp-lassm-spunet-v2-3/model/model_best.pth) |
+| LaSSM | ScanNet Val | 4 | 58.4 | 78.1 | 86.1 | - | - | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannet-lassm-spunet-v2-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannet-lassm-spunet-v2-3/model/model_best.pth) |
+| LaSSM | ScanNet200 Val | 4 | 29.3 | 39.2 | 44.5 | - | - | [Link](https://huggingface.co/RayYoh/LaSSM/raw/main/scannet200-lassm-minkunet-3/train.log) | [Link](https://huggingface.co/RayYoh/LaSSM/blob/main/scannet200-lassm-minkunet-3/model/model_best.pth) |
 
 
 ## :hammer: Installation
@@ -73,18 +72,14 @@ mkdir data
 ln -s ${PROCESSED_SCANNET_DIR} ${CODEBASE_DIR}/data/scannet
 ```
 
-**ScanNet++**
-- Download the [ScanNet++](https://kaldir.vc.in.tum.de/scannetpp/) dataset.
+**ScanNet++ V2**
+- Download the [ScanNet++ V2](https://kaldir.vc.in.tum.de/scannetpp/) dataset.
 - Run preprocessing code for raw ScanNet++ as follows:
 ```bash
 # RAW_SCANNETPP_DIR: the directory of downloaded ScanNet++ raw dataset.
 # PROCESSED_SCANNETPP_DIR: the directory of the processed ScanNet++ dataset (output dir).
 # NUM_WORKERS: the number of workers for parallel preprocessing.
 python pointcept/datasets/preprocessing/scannetpp/preprocess_scannetpp.py --dataset_root ${RAW_SCANNETPP_DIR} --output_root ${PROCESSED_SCANNETPP_DIR} --num_workers ${NUM_WORKERS}
-```
-- **Note:** We find that the preprocessing code of Pointcept yields higher scores compared to the official code of ScanNet++. However, when testing the results using the official code, the performance drops. The reason behind this is the difference in the processed validation data between Pointcept and the official code as discussed in [#279](https://github.com/Pointcept/Pointcept/issues/279). Despite the performance difference, it has been observed that Pointcept's processed data allows for faster training compared to the official code. Therefore, a suggested solution is to use Pointcept's data for training and the [official data](https://github.com/scannetpp/scannetpp) (specifically vtx_ instead of sampled_) for validation. After preprocessing, you can transfer the data into Pointcept format as follows:
-```bash
-python pointcept/custom/transfer_scannetpp_vtx_to_pcept.py
 ```
 - Sampling and chunking large point cloud data in train/val split as follows (only used for training):
 ```bash
@@ -105,18 +100,18 @@ Same to [Pointcept](https://github.com/Pointcept/Pointcept), the training proces
 
 **Attention:** Note that a cricital difference from Pointcept is that most of data augmentation operations are conducted on GPU in this [file](/pointcept/custom/transform_tensor.py). Make sure `ToTensor` is before the augmentation operations.
 
-**ScanNet V2, SceneMamba**
+**ScanNet V2, LaSSM**
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannet -c insseg-sm-spunet-v2-0 -n insseg-sm-spunet-v2-0
 ```
 
-**ScanNet200, SceneMamba**
+**ScanNet200, LaSSM**
 First download the pre-trained backbone from [Mask3D](https://github.com/JonasSchult/Mask3D) [Weight](https://github.com/oneformer3d/oneformer3d/releases/download/v1.0/mask3d_scannet200.pth), you can also use our provided weight [mask3d_scannet200](https://huggingface.co/RayYoh/SGIFormer/blob/main/mask3d_scannet200.pth).
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannet200 -c insseg-sm-minkunet-0 -n insseg-sm-minkunet-0
 ```
 
-**ScanNet++ V2, SceneMamba**
+**ScanNet++ V2, LaSSM**
 ```bash
 CUDA_VISIBLE_DEVICES=0,1,2,3 sh scripts/train.sh -g 4 -d scannetpp -c insseg-sgiformer-spunet-v2 -n insseg-sgiformer-spunet-v2
 ```
@@ -129,14 +124,14 @@ This repository is released under the [MIT license](LICENSE).
 
 ## :clap: Acknowledgement
 
-Our code is primarily built upon [Pointcept](https://github.com/Pointcept/Pointcept), [OneFormer3D](https://github.com/oneformer3d/oneformer3d), [Mask3D](https://github.com/JonasSchult/Mask3D), [SPFormer](https://github.com/sunjiahao1999/SPFormer), [Spherical Mask](https://github.com/yunshin/SphericalMask). We also thank [Pytorch Lightning](https://github.com/Lightning-AI/pytorch-lightning), [Point Cloud Matters](https://github.com/HaoyiZhu/PointCloudMatters?tab=readme-ov-file), and [Mask3D](https://github.com/JonasSchult/Mask3D) for their excellent templates.
+Our code is primarily built upon [Pointcept](https://github.com/Pointcept/Pointcept), [OneFormer3D](https://github.com/oneformer3d/oneformer3d), [SGIFormer](https://github.com/RayYoh/SGIFormer). We also thank [Pytorch Lightning](https://github.com/Lightning-AI/pytorch-lightning), [Point Cloud Matters](https://github.com/HaoyiZhu/PointCloudMatters?tab=readme-ov-file), and [Mask3D](https://github.com/JonasSchult/Mask3D) for their excellent templates.
 
 ## :pencil: Citation
 
 ```bib
-@article{yao2025scenemamba,
-  title={SceneMamba: A Memory-Efficient Query Decoder with Position-Guided State Space Models for 3D Scene Instance Segmentation},
-  author={xxx},
+@article{yao2025lassm,
+  title={LaSSM: Efficient Semantic-Spatial Query Decoding via Local Aggregation and State Space Models for 3D Instance Segmentation},
+  author={Yao, Lei and Wang, Yi and Yawen, Cui and Liu, Moyun and Chau, Lap-Pui},
   journal={xxx},
   year={2025},
   publisher={xxx}

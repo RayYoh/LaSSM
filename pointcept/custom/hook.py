@@ -449,15 +449,11 @@ class SPInsEvaluator(HookBase):
             self.trainer.logger.info(
                 "Test: [{iter}/{max_iter}] "
                 "Loss {loss:.4f} "
-                "Process Time: {process_time:.3f} "
-                "Mem R(MA/MR): {res:.0f}" " ({max_alloc:.0f}/{max_res:.0f}) ".format(
+                "Process Time: {process_time:.3f} ".format(
                     iter=i + 1,
                     max_iter=len(self.trainer.val_loader),
                     loss=loss.item(),
-                    process_time=process_time,
-                    res=res,
-                    max_alloc=max_alloc,
-                    max_res=max_res,
+                    process_time=process_time
                 )
             )
             torch.cuda.empty_cache()
@@ -639,13 +635,6 @@ class CustomInformationWriter(InformationWriter):
             )  
         lr = self.trainer.optimizer.state_dict()["param_groups"][0]["lr"]
         self.trainer.comm_info["iter_info"] += "Lr: {lr:.5e} ".format(lr=lr)
-        self.trainer.comm_info["iter_info"] += (
-            "Mem R(MA/MR): {res:.0f}" " ({max_alloc:.0f}/{max_res:.0f})"
-        ).format(
-            res=torch.cuda.memory_reserved() / (1024**2),
-            max_alloc=torch.cuda.max_memory_allocated() / (1024**2),
-            max_res=torch.cuda.max_memory_reserved() / (1024**2),
-        )
         if (self.trainer.comm_info["iter"] + 1) % self.interval == 0:
             self.trainer.logger.info(self.trainer.comm_info["iter_info"])
         self.trainer.comm_info["iter_info"] = ""  # reset iter info
