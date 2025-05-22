@@ -11,11 +11,11 @@
 </div>
 
 ## :memo: To-Do List
-- [x] Release trained weights and experiment record.
 - [x] Installation instructions.
 - [x] Processing datasets.
-- [ ] Release training configs.
-- [x] Release training code.
+- [x] Release training configs.
+- [ ] Release training code.
+- [x] Release trained weights and experiment record.
 
 
 
