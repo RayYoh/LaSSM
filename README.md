@@ -10,6 +10,12 @@
 
 </div>
 
+<details>
+<summary><b>Update: LaSSM achieves the SOTA performance on ScanNet++ V2 test set for 3D instance segmentation. Test scores accessed on 21 May 2025. <a href="https://kaldir.vc.in.tum.de/scannetpp/benchmark/insseg" target="_blank">ScanNet++ V2 test set</a></b> It ranks the first place at the <a href="https://kaldir.vc.in.tum.de/scannetpp/cvpr2025" target="_blank">CVPR 2025 ScanNet++ challenge</a> (27/05/2025).</summary>
+
+![image](./docs/lassm_scannetpp.png)
+</details>
+
 ## :memo: To-Do List
 - [x] Installation instructions.
 - [x] Processing datasets.
