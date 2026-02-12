@@ -1,12 +1,17 @@
 <div align="center">
 
 # LaSSM: Efficient Semantic-Spatial Query Decoding via Local Aggregation and State Space Models for 3D Instance Segmentation
+
+TCSVT 2026
+
 [Lei Yao](https://rayyoh.github.io/), [Yi Wang](https://wangyintu.github.io/), [Yawen Cui](https://scholar.google.com/citations?hl=zh-CN&user=Er0gOskAAAAJ&view_op=list_works&sortby=pubdate), [Moyun Liu](https://lmomoy.github.io/), [Lap-Pui Chau](https://www.eie.polyu.edu.hk/~lpchau/)
 
-[![python](https://img.shields.io/badge/-Python_3.8-blue?logo=python&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Static Badge](https://img.shields.io/badge/Weights-grey?style=plastic&logo=huggingface&logoColor=yellow)](https://huggingface.co/RayYoh/LaSSM)
-[![license](https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray)](LICENSE)
+<a href="https://arxiv.org/abs/2602.11007"><img src='https://img.shields.io/badge/arXiv-2602.11007-b31b1b.svg'></a>
+<a href="https://github.com/pre-commit/pre-commit"><img src="https://img.shields.io/badge/-Python_3.8-blue?logo=python&logoColor=white">
+<a href="https://huggingface.co/RayYoh/GaussianCross"><img src="https://img.shields.io/badge/Weights-grey?style=plastic&logo=huggingface&logoColor=yellow">
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray">
 
+If you have any questions, please consider open an issue or email me.
 
 </div>
 
@@ -20,7 +25,7 @@
 - [x] Installation instructions.
 - [x] Processing datasets.
 - [x] Release training configs.
-- [ ] Release training code.
+- [x] Release training code.
 - [x] Release trained weights and experiment record.
 
 
@@ -140,8 +145,7 @@ Our code is primarily built upon [Pointcept](https://github.com/Pointcept/Pointc
 @article{yao2025lassm,
   title={LaSSM: Efficient Semantic-Spatial Query Decoding via Local Aggregation and State Space Models for 3D Instance Segmentation},
   author={Yao, Lei and Wang, Yi and Yawen, Cui and Liu, Moyun and Chau, Lap-Pui},
-  journal={xxx},
-  year={2025},
-  publisher={xxx}
+  journal={arXiv preprint arXiv:2602.11007},
+  year={2026},
 }
 ```

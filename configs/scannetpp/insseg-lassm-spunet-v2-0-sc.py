@@ -73,7 +73,7 @@ model = dict(
 )
 
 # scheduler settings
-optimizer = dict(type="AdamW", lr=0.0003, weight_decay=0.05)
+optimizer = dict(type="AdamW", lr=0.0001, weight_decay=0.05)
 scheduler = dict(type="PolyLR")
 
 # dataset settings
