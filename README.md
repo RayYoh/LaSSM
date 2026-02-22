@@ -63,6 +63,11 @@ pip install torch-geometric
 pip install spconv-cu117
 
 pip install transformers==4.44.0 mamba-ssm==2.0.4 causal-conv1d==1.2.0.post2
+
+# install fps-ops
+cd libs/fps_ops
+python setup.py install
+cd ../.. 
 ```
 Note that they also provide scripts to build correponding docker image: [build_image.sh](https://github.com/Pointcept/Pointcept/blob/main/scripts/build_image.sh)
 
