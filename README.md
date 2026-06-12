@@ -113,6 +113,48 @@ mkdir data
 ln -s ${PROCESSED_SCANNETPP_DIR} ${CODEBASE_DIR}/data/scannetpp
 ```
 
+## :open_file_folder: Dataset Folder Structure
+After preprocessing and linking, all data used by LaSSM lives under `data/`:
+
+```
+data/
+├── scannet    ->  <PROCESSED_SCANNET_DIR>      # symlink; ScanNet V2 and ScanNet200
+├── scannetpp  ->  <PROCESSED_SCANNETPP_DIR>    # symlink; ScanNet++ V2
+└── mask3d_scannet200.pth                       # pretrained MinkUNet backbone (ScanNet200 only)
+```
+
+### Per-scene files
+Each scene is a folder of point-wise `.npy` arrays (`N` = number of points). Four arrays are common to **both** datasets:
+
+| file | shape | dtype | meaning |
+| :-- | :-- | :-- | :-- |
+| `coord.npy` | (N, 3) | float32 | point XYZ |
+| `color.npy` | (N, 3) | uint8 | RGB color |
+| `normal.npy` | (N, 3) | float32 | per-point normal |
+| `superpoint.npy` | (N,) | int64 | superpoint / over-segmentation id — **the asset this repo adds on top of Pointcept** |
+
+The **label** files differ per dataset:
+
+- **ScanNet V2 / ScanNet200** — `instance.npy`, `segment20.npy`, `segment200.npy`, all `(N,)` `int64`. ScanNet V2 reads `segment20`, ScanNet200 reads `segment200`; `instance` is the instance id (`-1` = unlabeled).
+- **ScanNet++ V2** — `instance.npy` and `segment.npy`, `int16`; in `train`/`val` they keep up to 3 annotator columns `(N, 3)` (the loader uses column 0), in `val_vtx` they are 1-D `(N,)`.
+
+### Splits
+**ScanNet** (`data/scannet`) — ScanNet V2 and ScanNet200 share the same scenes, one folder per scene:
+```
+data/scannet/
+├── train/   # 1201 scenes, e.g. scene0000_00/
+└── val/     #  312 scenes, e.g. scene0011_00/
+```
+
+**ScanNet++** (`data/scannetpp`):
+```
+data/scannetpp/
+├── train_grid1mm_chunk6x6_stride3x3/   # training: 1 mm grid, 6×6 m chunks — 2908 chunks
+├── val/                                # validation, grid-sampled scenes — 50 scenes
+└── val_vtx/                            # full-resolution mesh vertices, for evaluation — 50 scenes
+```
+The configs set `train="train_grid1mm_chunk6x6_stride3x3"`, `val="val"`, `test="val_vtx"`.
+
 ## 🚀 Training
 Same to [Pointcept](https://github.com/Pointcept/Pointcept), the training process is based on configs in `configs` folder. The training scripts will create an experiment folder in `exp` and backup essential code in the experiment folder. Training config, log file, tensorboard, and checkpoints will also be saved during the training process.
 

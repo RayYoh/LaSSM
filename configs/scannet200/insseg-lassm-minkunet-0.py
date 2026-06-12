@@ -81,7 +81,7 @@ scheduler = dict(type="PolyLR")
 
 # dataset settings
 dataset_type = "ScanNet200SpDataset"
-data_root = "data/scannet_sp"
+data_root = "data/scannet"
 
 data = dict(
     # for the data, we need to load all categories
