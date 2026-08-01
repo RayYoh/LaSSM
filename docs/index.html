@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaSSM | Efficient Semantic-Spatial Query Decoding for 3D Instance Segmentation</title>
+<meta name="description" content="LaSSM (IEEE TCSVT 2026): a simple, efficient query-based 3D instance segmentation model. Ranks first on the ScanNet++ V2 leaderboard with 1/3 the FLOPs of the previous best.">
+<meta name="author" content="Lei Yao, Yi Wang, Yawen Cui, Moyun Liu, Lap-Pui Chau">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="LaSSM: Efficient Semantic-Spatial Query Decoding for 3D Instance Segmentation">
+<meta property="og:description" content="Ranks first on ScanNet++ V2, outperforming the previous best by 2.5 mAP with only 1/3 the FLOPs. IEEE TCSVT 2026.">
+<meta property="og:image" content="https://rayyoh.github.io/LaSSM/assets/teaser_wide.webp">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<meta name="theme-color" content="#0d7a6f" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0e13" media="(prefers-color-scheme: dark)">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   LaSSM — technical-drafting aesthetic
+   Grid paper, instrument readouts, oscilloscope plot.
+   ============================================================ */
+:root{
+  --teal:#0d7a6f;   --teal-2:#0f9384;  --teal-wash:#e8f4f2;
+  --coral:#e8543f;  --coral-wash:#fdeceA;
+  --ink:#12151c;    --ink-2:#454c59;   --ink-3:#767d8b;
+  --paper:#fcfcfb;  --panel:#ffffff;
+  --rule:#dfe2e6;   --rule-2:#eceef0;
+  --grid:rgba(18,21,28,.045);
+  --shadow:0 1px 2px rgba(18,21,28,.05), 0 8px 24px -12px rgba(18,21,28,.14);
+  --sans:'Archivo',-apple-system,sans-serif;
+  --serif:'Spectral',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --maxw:1080px;
+}
+[data-theme="dark"]{
+  --teal:#3fb8a7;   --teal-2:#5fd4c2;  --teal-wash:#0e2a28;
+  --coral:#ff7a63;  --coral-wash:#2e1712;
+  --ink:#e7eaee;    --ink-2:#a2abb8;   --ink-3:#727c8b;
+  --paper:#0b0e13;  --panel:#11151c;
+  --rule:#242a34;   --rule-2:#1a1f27;
+  --grid:rgba(231,234,238,.045);
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px -14px rgba(0,0,0,.7);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif); font-size:17px; line-height:1.68;
+  -webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+
+/* ---------- reveal ---------- */
+.rise{opacity:0; transform:translateY(14px); animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.d1{animation-delay:.05s}.d2{animation-delay:.14s}.d3{animation-delay:.23s}
+.d4{animation-delay:.32s}.d5{animation-delay:.41s}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.3,1)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rise,.reveal{animation:none!important;opacity:1!important;transform:none!important;transition:none!important}
+  *{transition-duration:.01ms!important}
+}
+
+/* ---------- hero ---------- */
+header.hero{padding:78px 0 34px; position:relative}
+.stamp{
+  font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--teal); display:flex; align-items:center; gap:12px; margin-bottom:26px; flex-wrap:wrap;
+}
+.stamp::before{content:""; width:26px; height:1px; background:var(--teal)}
+.stamp .sep{color:var(--rule)}
+.stamp .venue{color:var(--ink-2)}
+h1.title{
+  font-family:var(--sans); font-weight:600; font-size:clamp(1.16rem,2.28vw,1.72rem);
+  line-height:1.3; letter-spacing:-.014em; margin:0 0 30px; color:var(--ink);
+  text-wrap:balance;
+}
+h1.title .mark{
+  display:flex; align-items:center; gap:.22em;
+  font-weight:800; font-size:clamp(2.7rem,6.4vw,4.3rem);
+  line-height:1; letter-spacing:-.035em; color:var(--teal); margin-bottom:14px;
+}
+h1.title .mark img{
+  width:.84em; height:.84em; flex:none; display:block;
+}
+.authors{font-family:var(--sans); font-weight:500; font-size:1.02rem; margin:0 0 6px; line-height:1.9}
+.authors a{color:var(--ink); text-decoration:none; border-bottom:1px solid var(--rule); padding-bottom:1px}
+.authors a:hover{color:var(--teal); border-color:var(--teal)}
+.authors .me{color:var(--teal); font-weight:700}
+.authors sup{font-family:var(--mono); font-size:.62em; color:var(--teal); margin-left:1px}
+.affil{font-family:var(--mono); font-size:12.5px; color:var(--ink-3); margin:0 0 30px; letter-spacing:.01em}
+.affil sup{color:var(--teal)}
+
+/* ---------- buttons ---------- */
+.links{display:flex; flex-wrap:wrap; gap:9px}
+.btn{
+  display:inline-flex; align-items:center; gap:8px; text-decoration:none;
+  font-family:var(--mono); font-size:12.5px; font-weight:500; letter-spacing:.02em;
+  padding:9px 15px; border-radius:2px; border:1px solid var(--rule);
+  color:var(--ink); background:var(--panel); transition:.18s ease;
+}
+.btn:hover{border-color:var(--teal); color:var(--teal); transform:translateY(-1px)}
+.btn.primary{background:var(--teal); border-color:var(--teal); color:#fff}
+.btn.primary:hover{background:var(--teal-2); border-color:var(--teal-2); color:#fff}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+
+/* ---------- instrument readout ---------- */
+.readout{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:0;
+  border:1px solid var(--rule); border-radius:3px; overflow:hidden;
+  background:var(--panel); margin:44px 0 0; box-shadow:var(--shadow);
+}
+.cell{padding:20px 18px; border-right:1px solid var(--rule-2); position:relative}
+.cell:last-child{border-right:none}
+.cell .k{
+  font-family:var(--mono); font-size:10px; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:9px; display:block;
+}
+.cell .v{
+  font-family:var(--sans); font-weight:800; font-size:1.85rem; line-height:1;
+  letter-spacing:-.02em; color:var(--teal); display:flex; align-items:baseline; gap:3px;
+}
+.cell .v .u{font-size:.5em; font-weight:600; color:var(--ink-3); letter-spacing:0}
+.cell.hi .v{color:var(--coral)}
+.cell .n{font-family:var(--serif); font-size:12.5px; color:var(--ink-3); margin-top:7px; line-height:1.4; font-style:italic}
+@media(max-width:820px){
+  .readout{grid-template-columns:repeat(2,1fr)}
+  .cell:nth-child(2){border-right:none}
+  .cell:nth-child(1),.cell:nth-child(2){border-bottom:1px solid var(--rule-2)}
+}
+
+/* ---------- sections ---------- */
+section{padding:64px 0 8px}
+.eyebrow{display:flex; align-items:center; gap:14px; margin-bottom:26px}
+.eyebrow .num{
+  font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.14em;
+  color:var(--paper); background:var(--teal); padding:4px 8px; border-radius:2px;
+}
+.eyebrow h2{
+  font-family:var(--sans); font-weight:700; font-size:1.32rem; letter-spacing:-.01em; margin:0;
+}
+.eyebrow .line{flex:1; height:1px; background:var(--rule)}
+
+/* ---------- figures ---------- */
+figure{margin:0 0 26px}
+.frame{
+  border:1px solid var(--rule); border-radius:3px; background:var(--panel);
+  padding:16px; box-shadow:var(--shadow); overflow:hidden;
+}
+.frame img{display:block; width:100%; height:auto; border-radius:2px}
+[data-theme="dark"] .frame img[src$=".svg"],
+[data-theme="dark"] .frame img[src$=".webp"]{
+  background:#fff; border-radius:2px;   /* paper-white mount for figures */
+}
+figcaption{
+  font-family:var(--serif); font-size:14px; color:var(--ink-2); line-height:1.6;
+  margin-top:13px; padding-left:14px; border-left:2px solid var(--teal);
+}
+figcaption b{font-family:var(--sans); font-weight:600; color:var(--ink)}
+
+/* ---------- TL;DR ---------- */
+.tldr{
+  display:flex; gap:20px; align-items:flex-start; margin:44px 0 0;
+  border:1px solid var(--rule); border-left:3px solid var(--teal); border-radius:3px;
+  background:var(--panel); padding:22px 24px; box-shadow:var(--shadow);
+}
+.tldr .k{
+  font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.14em;
+  color:var(--teal); white-space:nowrap; padding-top:4px;
+}
+.tldr p{margin:0; font-size:16.5px; line-height:1.62; color:var(--ink)}
+.tldr b{font-family:var(--sans); font-weight:700}
+@media(max-width:700px){.tldr{flex-direction:column; gap:10px}}
+
+/* ---------- abstract ---------- */
+.abstract{font-size:16.5px; line-height:1.72; columns:2; column-gap:44px}
+.abstract p{margin:0 0 15px; break-inside:avoid}
+@media(max-width:820px){.abstract{columns:1}}
+.abstract .first::first-letter{
+  font-family:var(--sans); font-weight:800; font-size:3.1em; line-height:.82;
+  float:left; margin:5px 11px 0 0; color:var(--teal);
+}
+.keys{display:flex; flex-wrap:wrap; gap:7px; margin-top:22px; column-span:all}
+.key{
+  font-family:var(--mono); font-size:11.5px; letter-spacing:.03em; color:var(--teal);
+  background:var(--teal-wash); border:1px solid transparent; padding:5px 10px; border-radius:2px;
+}
+
+/* ---------- method blocks ---------- */
+.two{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.card{
+  border:1px solid var(--rule); border-radius:3px; background:var(--panel);
+  padding:22px; box-shadow:var(--shadow);
+}
+.card .tag{
+  font-family:var(--mono); font-size:10px; letter-spacing:.15em; text-transform:uppercase;
+  color:var(--teal); margin-bottom:10px; display:block;
+}
+.card h3{font-family:var(--sans); font-weight:700; font-size:1.06rem; margin:0 0 10px; line-height:1.3}
+.card p{margin:0; font-size:15.5px; color:var(--ink-2); line-height:1.65}
+.card img{width:100%; height:auto; margin-top:16px; border-radius:2px}
+[data-theme="dark"] .card img{background:#fff}
+
+/* ---------- chart ---------- */
+.chart-wrap{
+  border:1px solid var(--rule); border-radius:3px; background:var(--panel);
+  padding:24px 20px 16px; box-shadow:var(--shadow); margin-bottom:26px;
+}
+.chart-head{display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin-bottom:6px; flex-wrap:wrap}
+.chart-head h3{font-family:var(--sans); font-weight:700; font-size:1.02rem; margin:0}
+.chart-head .meta{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.04em}
+.chart-wrap svg{display:block; width:100%; height:auto; overflow:visible}
+
+/* ---- chart animation (plays when scrolled into view) ---- */
+.chart-wrap .a-grid{opacity:0}
+.chart-wrap .a-old,.chart-wrap .a-new,.chart-wrap .a-lbl,.chart-wrap .a-call,.chart-wrap .a-head{opacity:0}
+.chart-wrap .a-pop{transform-box:fill-box; transform-origin:center; transform:scale(.3)}
+.chart-wrap .a-line{stroke-dasharray:340; stroke-dashoffset:340; opacity:0}
+.chart-wrap .a-tip{opacity:0}
+.chart-wrap .a-pulse{opacity:0; transform-box:fill-box; transform-origin:center}
+
+.chart-wrap.in .a-grid{animation:cFade .5s ease forwards}
+.chart-wrap.in .a-head{animation:cFade .5s .15s ease forwards}
+.chart-wrap.in .a-old{animation:cPop .5s .35s cubic-bezier(.2,1.3,.4,1) forwards}
+.chart-wrap.in .a-line{animation:cDraw 1.05s .75s cubic-bezier(.45,.05,.35,1) forwards}
+.chart-wrap.in .a-tip{animation:cFade .3s 1.72s ease forwards}
+.chart-wrap.in .a-new{animation:cPop .55s 1.78s cubic-bezier(.2,1.6,.4,1) forwards}
+.chart-wrap .a-glow{opacity:0; transform-box:fill-box; transform-origin:center; transform:scale(.3)}
+.chart-wrap.in .a-glow{animation:cPopGlow .55s 1.78s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes cPopGlow{from{opacity:0;transform:scale(.3)} to{opacity:.22;transform:scale(1)}}
+.chart-wrap.in .a-pulse{animation:cPulse 1.9s 2.2s ease-out 3 both}
+.chart-wrap.in .a-call{animation:cFade .5s 2.15s ease forwards}
+.chart-wrap.in .a-lbl{animation:cFade .5s 2.3s ease forwards}
+
+@keyframes cFade{to{opacity:1}}
+@keyframes cPop{from{opacity:0;transform:scale(.3)} to{opacity:1;transform:scale(1)}}
+@keyframes cDraw{0%{opacity:1;stroke-dashoffset:340} 100%{opacity:1;stroke-dashoffset:0}}
+@keyframes cPulse{0%{opacity:.5;transform:scale(1)} 70%{opacity:0;transform:scale(2.6)} 100%{opacity:0;transform:scale(2.6)}}
+
+@media (prefers-reduced-motion:reduce){
+  .chart-wrap .a-grid,.chart-wrap .a-old,.chart-wrap .a-new,.chart-wrap .a-lbl,
+  .chart-wrap .a-call,.chart-wrap .a-head,.chart-wrap .a-tip{opacity:1!important; animation:none!important}
+  .chart-wrap .a-pop{transform:none!important}
+  .chart-wrap .a-glow{opacity:.22!important; transform:none!important; animation:none!important}
+  .chart-wrap .a-line{stroke-dashoffset:0!important; opacity:1!important; animation:none!important}
+  .chart-wrap .a-pulse{display:none}
+}
+.legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--rule-2)}
+.legend span{font-family:var(--mono); font-size:11.5px; color:var(--ink-2); display:flex; align-items:center; gap:7px}
+.legend i{width:9px; height:9px; border-radius:50%; display:inline-block}
+
+/* ---------- tables ---------- */
+.tbl-scroll{overflow-x:auto; border:1px solid var(--rule); border-radius:3px; background:var(--panel); box-shadow:var(--shadow); margin-bottom:20px}
+table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:13px; min-width:540px}
+caption{
+  text-align:left; font-family:var(--sans); font-weight:600; font-size:.94rem;
+  padding:16px 18px 12px; color:var(--ink); caption-side:top;
+}
+caption em{font-family:var(--serif); font-weight:400; font-style:italic; color:var(--ink-3); font-size:.88rem}
+th,td{padding:9px 14px; text-align:right; border-bottom:1px solid var(--rule-2); white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{
+  font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:500; border-bottom:1px solid var(--rule);
+}
+tbody tr:last-child td{border-bottom:none}
+td.best{color:var(--ink); font-weight:600}
+tr.ours{background:var(--teal-wash)}
+tr.ours td{font-weight:600; color:var(--teal); border-bottom-color:transparent}
+tr.ours td:first-child{color:var(--teal)}
+tr.ours td.peak{color:var(--coral)}
+.dl{display:flex; gap:8px; justify-content:flex-end}
+.dl a{
+  color:var(--ink-3); text-decoration:none; font-size:11px; letter-spacing:.03em;
+  border-bottom:1px solid var(--rule); padding-bottom:1px;
+}
+.dl a:hover{color:var(--teal); border-color:var(--teal)}
+
+/* ---------- bibtex ---------- */
+.bib{position:relative; border:1px solid var(--rule); border-radius:3px; background:var(--panel); overflow:hidden}
+.bib pre{
+  margin:0; padding:20px; overflow-x:auto; font-family:var(--mono);
+  font-size:12.5px; line-height:1.65; color:var(--ink-2);
+}
+.copy{
+  position:absolute; top:12px; right:12px; font-family:var(--mono); font-size:11px;
+  padding:6px 11px; border-radius:2px; border:1px solid var(--rule); background:var(--paper);
+  color:var(--ink-2); cursor:pointer; transition:.18s;
+}
+.copy:hover{border-color:var(--teal); color:var(--teal)}
+.copy.done{background:var(--teal); border-color:var(--teal); color:#fff}
+
+/* ---------- footer ---------- */
+footer{margin-top:64px; padding:34px 0 60px; border-top:1px solid var(--rule)}
+footer p{font-family:var(--mono); font-size:12px; color:var(--ink-3); line-height:1.9; margin:0 0 6px}
+footer a{color:var(--ink-2); text-decoration:none; border-bottom:1px solid var(--rule)}
+footer a:hover{color:var(--teal); border-color:var(--teal)}
+
+/* ---------- theme toggle ---------- */
+#theme{
+  position:fixed; right:22px; bottom:22px; z-index:50; width:42px; height:42px;
+  border-radius:50%; border:1px solid var(--rule); background:var(--panel); color:var(--ink-2);
+  cursor:pointer; display:grid; place-items:center; box-shadow:var(--shadow); transition:.18s;
+}
+#theme:hover{color:var(--teal); border-color:var(--teal); transform:translateY(-2px)}
+#theme svg{width:17px;height:17px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="stamp rise d1">
+    <span>3D Instance Segmentation</span><span class="sep">/</span>
+    <span class="venue">IEEE TCSVT 2026</span>
+  </div>
+
+  <h1 class="title rise d1">
+    <span class="mark"><img src="assets/favicon.svg" alt="" aria-hidden="true">LaSSM</span>
+    Efficient Semantic-Spatial Query Decoding via Local Aggregation and
+    State Space Models for 3D Instance Segmentation
+  </h1>
+
+  <p class="authors rise d3">
+    <a href="https://rayyoh.github.io/" target="_blank" rel="noopener noreferrer" class="me">Lei Yao</a><sup>1</sup>,
+    <a href="https://wangyintu.github.io/" target="_blank" rel="noopener noreferrer">Yi Wang</a><sup>1</sup>,
+    <a href="https://scholar.google.com/citations?hl=zh-CN&user=Er0gOskAAAAJ" target="_blank" rel="noopener noreferrer">Yawen Cui</a><sup>1</sup>,
+    <a href="https://lmomoy.github.io/" target="_blank" rel="noopener noreferrer">Moyun Liu</a><sup>2</sup>,
+    <a href="https://www.eie.polyu.edu.hk/~lpchau/" target="_blank" rel="noopener noreferrer">Lap-Pui Chau</a><sup>1</sup>
+  </p>
+  <p class="affil rise d3">
+    <sup>1</sup>The Hong Kong Polytechnic University &nbsp;·&nbsp;
+    <sup>2</sup>Huazhong University of Science and Technology
+  </p>
+
+  <div class="links rise d4">
+    <a class="btn primary" href="https://arxiv.org/abs/2602.11007" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      arXiv
+    </a>
+    <a class="btn" href="https://ieeexplore.ieee.org/abstract/document/11396941" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Paper
+    </a>
+    <a class="btn" href="https://github.com/RayYoh/LaSSM" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5A11.5 11.5 0 0 0 23.5 12C23.5 5.7 18.3.5 12 .5z"/></svg>
+      Code
+    </a>
+    <a class="btn" href="https://huggingface.co/RayYoh/LaSSM" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+      Weights
+    </a>
+    <a class="btn" href="https://kaldir.vc.in.tum.de/scannetpp/benchmark/insseg" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V10"/><path d="M12 20V4"/><path d="M18 20v-7"/></svg>
+      Leaderboard
+    </a>
+  </div>
+
+  <div class="tldr rise d4">
+    <span class="k">TL;DR</span>
+    <p>We pick queries from superpoints using <b>both semantic and spatial cues</b>, then refine them with a
+    <b>coordinate-guided state space model instead of attention</b> &mdash; first place on ScanNet++ V2 at
+    <b>one third of the FLOPs</b> of the previous best.</p>
+  </div>
+
+  <!-- instrument readout -->
+  <div class="readout rise d5">
+    <div class="cell">
+      <span class="k">ScanNet++ V2 Test</span>
+      <span class="v">32.4<span class="u">mAP</span></span>
+      <span class="n">Ranked 1st on the public leaderboard</span>
+    </div>
+    <div class="cell hi">
+      <span class="k">Over previous best</span>
+      <span class="v">+2.5<span class="u">mAP</span></span>
+      <span class="n">against SGIFormer (29.9)</span>
+    </div>
+    <div class="cell hi">
+      <span class="k">Compute</span>
+      <span class="v">⅓<span class="u">FLOPs</span></span>
+      <span class="n">4.78G vs 13.51G</span>
+    </div>
+    <div class="cell">
+      <span class="k">Challenge</span>
+      <span class="v">1<span class="u">st place</span></span>
+      <span class="n">CVPR 2025 ScanNet++ challenge</span>
+    </div>
+  </div>
+</header>
+
+<!-- ================= TEASER ================= -->
+<section style="padding-top:34px">
+  <figure class="reveal">
+    <div class="frame"><img src="assets/teaser_wide.webp" alt="Query distribution comparison: input point cloud, FPS sampling, semantic selection, and LaSSM. LaSSM covers regions that FPS misses." loading="lazy"></div>
+    <figcaption>
+      <b>Query distribution.</b> Farthest point sampling scatters queries over empty floor (red box), while purely
+      semantic selection collapses onto dominant surfaces (blue box). LaSSM combines both cues, covering the scene
+      comprehensively and converging faster.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ================= ABSTRACT ================= -->
+<section id="abstract">
+  <div class="eyebrow reveal"><span class="num">01</span><h2>Abstract</h2><span class="line"></span></div>
+  <div class="abstract reveal">
+    <p class="first">Query-based 3D instance segmentation is held back on two fronts: sparse point clouds make query
+    initialization difficult, and query decoders lean on computationally intensive attention. <b>LaSSM</b> addresses
+    both, prioritising simplicity and efficiency. A <b>hierarchical semantic-spatial query initializer</b> derives
+    queries from superpoints using both semantic cues and spatial distribution, covering the scene comprehensively
+    and converging faster.</p>
+
+    <p>A <b>coordinate-guided SSM decoder</b> then refines them: local aggregation keeps each query within a
+    geometrically coherent region, and a spatial dual-path SSM block captures dependencies across the query set
+    through the associated coordinates. LaSSM ranks first on the ScanNet++ V2 leaderboard, beating the previous best
+    by 2.5% mAP with only 1/3 FLOPs, and stays competitive on ScanNet, ScanNet200, S3DIS and ScanNet++ V1 at lower
+    cost.</p>
+
+    <div class="keys">
+      <span class="key">3D Instance Segmentation</span>
+      <span class="key">State Space Models</span>
+      <span class="key">Query Decoding</span>
+      <span class="key">Superpoints</span>
+      <span class="key">Efficiency</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section id="method">
+  <div class="eyebrow reveal"><span class="num">02</span><h2>Method</h2><span class="line"></span></div>
+
+  <figure class="reveal">
+    <div class="frame"><img src="assets/overview_v3.svg" alt="LaSSM architecture: a backbone extracts point features, superpoint pooling forms features and coordinates, a hierarchical semantic-spatial initializer selects queries, and a coordinate-guided SSM decoder refines them into instance predictions." loading="lazy"></div>
+    <figcaption>
+      <b>Overall architecture.</b> Point features are pooled into superpoints, from which the initializer draws a
+      query set using both semantic activation and spatial coverage. The coordinate-guided SSM decoder then refines
+      those queries into instance masks &mdash; without any global attention over the scene.
+    </figcaption>
+  </figure>
+
+  <div class="two">
+    <div class="card reveal">
+      <span class="tag">Component 01</span>
+      <h3>Hierarchical Semantic-Spatial Query Initializer</h3>
+      <p>Queries are drawn from superpoints by jointly weighing a semantic activation score and spatial distribution,
+      instead of relying on farthest point sampling or semantics alone. This resolves the query initialization
+      dilemma: the scene is covered comprehensively, and training converges faster.</p>
+    </div>
+    <div class="card reveal">
+      <span class="tag">Component 02</span>
+      <h3>Coordinate-guided SSM Query Decoder</h3>
+      <p>A local aggregation scheme confines each query to a geometrically coherent neighbourhood, and a spatial
+      dual-path SSM block propagates dependencies across the query set using the associated coordinates &mdash;
+      linear-time refinement in place of quadratic attention.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section id="results">
+  <div class="eyebrow reveal"><span class="num">03</span><h2>Results</h2><span class="line"></span></div>
+
+  <!-- ---- accuracy vs FLOPs ---- -->
+  <div class="chart-wrap reveal">
+    <div class="chart-head">
+      <h3>Accuracy versus computation</h3>
+      <span class="meta">SCANNET++ V2 · AP&#8325;&#8320; vs FLOPs</span>
+    </div>
+    <svg viewBox="0 0 620 300" role="img" aria-label="Scatter plot of AP50 against FLOPs on ScanNet++ V2. LaSSM reaches 43.5 AP50 at 4.777 GFLOPs, while SGIFormer reaches 41.1 AP50 at 13.513 GFLOPs.">
+      <defs>
+        <pattern id="pgrid" width="31" height="24" patternUnits="userSpaceOnUse">
+          <path d="M31 0H0V24" fill="none" stroke="var(--rule-2)" stroke-width="1"/>
+        </pattern>
+        <filter id="glow" x="-70%" y="-70%" width="240%" height="240%">
+          <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <g class="a-grid">
+      <rect x="62" y="16" width="496" height="216" fill="url(#pgrid)"/>
+      <rect x="62" y="16" width="496" height="216" fill="none" stroke="var(--rule)" stroke-width="1"/>
+      </g>
+
+      <!-- y axis: AP50 40 -> 45 -->
+      <g class="a-head" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--ink-3)">
+        <text x="54" y="236" text-anchor="end">40</text>
+        <text x="54" y="193" text-anchor="end">41</text>
+        <text x="54" y="150" text-anchor="end">42</text>
+        <text x="54" y="107" text-anchor="end">43</text>
+        <text x="54" y="64"  text-anchor="end">44</text>
+        <text x="54" y="21"  text-anchor="end">45</text>
+        <!-- x axis: FLOPs 0 -> 16 G -->
+        <text x="62"  y="250" text-anchor="middle">0</text>
+        <text x="186" y="250" text-anchor="middle">4</text>
+        <text x="310" y="250" text-anchor="middle">8</text>
+        <text x="434" y="250" text-anchor="middle">12</text>
+        <text x="558" y="250" text-anchor="middle">16</text>
+      </g>
+      <text class="a-head" x="310" y="272" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5"
+            letter-spacing="1.4" fill="var(--ink-2)">FLOPs (G) — lower is better</text>
+      <text class="a-head" x="18" y="124" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10.5"
+            letter-spacing="1.4" fill="var(--ink-2)" transform="rotate(-90 18 124)">AP₅₀ — higher is better</text>
+
+      <!-- improvement arrow: SGIFormer -> LaSSM -->
+      <path class="a-line" d="M470 189 C 380 186, 300 146, 226 113" fill="none" stroke="var(--coral)"
+            stroke-width="1.5" stroke-dasharray="5 4"/>
+      <path class="a-tip" d="M0 0 L-9 -4.2 L-9 4.2 z" fill="var(--coral)"
+            transform="translate(224,112) rotate(204)"/>
+      <text class="a-call" x="358" y="137" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11"
+            font-weight="500" fill="var(--coral)" stroke="var(--panel)" stroke-width="4"
+            paint-order="stroke" stroke-linejoin="round">−65% FLOPs · +2.4 AP₅₀</text>
+
+      <!-- SGIFormer (13.513G, 41.1) -->
+      <circle class="a-old a-pop" cx="481" cy="193" r="6.5" fill="var(--ink-3)"/>
+      <text class="a-old" x="481" y="176" text-anchor="middle" font-family="Archivo, sans-serif" font-size="12"
+            font-weight="600" fill="var(--ink-2)">SGIFormer</text>
+      <text class="a-old" x="481" y="212" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10"
+            fill="var(--ink-3)">13.51G · 41.1</text>
+
+      <!-- LaSSM (4.777G, 43.5) -->
+      <circle class="a-pulse" cx="210" cy="107" r="9" fill="none" stroke="var(--coral)" stroke-width="2"/>
+      <circle class="a-glow" cx="210" cy="107" r="11" fill="var(--coral)" filter="url(#glow)"/>
+      <circle class="a-new a-pop" cx="210" cy="107" r="7.5" fill="var(--coral)"/>
+      <text class="a-lbl" x="210" y="88" text-anchor="middle" font-family="Archivo, sans-serif" font-size="13.5"
+            font-weight="800" fill="var(--coral)">LaSSM (Ours)</text>
+      <text class="a-lbl" x="196" y="132" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10"
+            fill="var(--coral)">4.78G · 43.5</text>
+    </svg>
+    <div class="legend">
+      <span><i style="background:var(--coral)"></i> LaSSM (ours)</span>
+      <span><i style="background:var(--ink-3)"></i> Previous best (SGIFormer)</span>
+      <span style="color:var(--ink-3)">OneFormer3D runs out of memory on ScanNet++ V2</span>
+    </div>
+  </div>
+
+  <!-- ---- benchmark tables ---- -->
+  <div class="tbl-scroll reveal">
+    <table>
+      <caption>ScanNet++ V2 &nbsp;<em>— hidden test split, with validation AP₅₀ for reference</em></caption>
+      <thead>
+        <tr><th>Method</th><th>Val AP₅₀</th><th>Test mAP</th><th>Test AP₅₀</th><th>Test AP₂₅</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>PointGroup</td><td>14.7</td><td>9.1</td><td>15.2</td><td>21.0</td></tr>
+        <tr><td>SoftGroup</td><td>–</td><td>14.2</td><td>23.4</td><td>29.3</td></tr>
+        <tr><td>PTv3-PG</td><td>–</td><td>25.9</td><td>38.7</td><td>44.6</td></tr>
+        <tr><td>OneFormer3D</td><td>41.1</td><td>28.2</td><td>43.3</td><td>51.7</td></tr>
+        <tr><td>SPFormer</td><td>42.1</td><td>29.0</td><td>43.5</td><td>51.5</td></tr>
+        <tr><td>SGIFormer</td><td>41.1</td><td>29.9</td><td>45.7</td><td>54.4</td></tr>
+        <tr class="ours"><td>LaSSM (ours)</td><td class="peak">43.5</td><td class="peak">32.4</td><td class="peak">48.0</td><td class="peak">54.8</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tbl-scroll reveal">
+    <table>
+      <caption>Efficiency &nbsp;<em>— same backbone, measured under identical settings</em></caption>
+      <thead>
+        <tr><th>Method</th><th>ScanNet V2 AP₅₀</th><th>FLOPs</th><th>ScanNet++ V2 AP₅₀</th><th>FLOPs</th><th>Params</th><th>Time</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>OneFormer3D</td><td>76.3</td><td>4.082G</td><td>41.1</td><td>OOM</td><td>–</td><td>–</td></tr>
+        <tr><td>SGIFormer</td><td class="best">78.4</td><td>4.456G</td><td>41.1</td><td>13.513G</td><td class="best">15.96M</td><td class="best">355.86ms</td></tr>
+        <tr class="ours"><td>LaSSM (ours)</td><td>78.1</td><td class="peak">3.711G</td><td class="peak">43.5</td><td class="peak">4.777G</td><td>18.38M</td><td>379.94ms</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tbl-scroll reveal">
+    <table>
+      <caption>Released checkpoints &nbsp;<em>— all trained on 4 GPUs</em></caption>
+      <thead>
+        <tr><th>Benchmark</th><th>mAP</th><th>AP₅₀</th><th>AP₂₅</th><th>Resources</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ScanNet++ V2 Val</td><td>29.1</td><td>43.5</td><td>51.6</td>
+          <td><span class="dl">
+            <a href="https://github.com/RayYoh/LaSSM/blob/main/configs/scannetpp/insseg-lassm-spunet-v2-3.py" target="_blank" rel="noopener noreferrer">config</a>
+            <a href="https://huggingface.co/RayYoh/LaSSM/raw/main/scannetpp-lassm-spunet-v2-3/train.log" target="_blank" rel="noopener noreferrer">log</a>
+            <a href="https://huggingface.co/RayYoh/LaSSM/blob/main/scannetpp-lassm-spunet-v2-3/model/model_best.pth" target="_blank" rel="noopener noreferrer">model</a>
+          </span></td>
+        </tr>
+        <tr>
+          <td>ScanNet Val</td><td>58.4</td><td>78.1</td><td>86.1</td>
+          <td><span class="dl">
+            <a href="https://github.com/RayYoh/LaSSM/blob/main/configs/scannet/insseg-lassm-spunet-v2-3.py" target="_blank" rel="noopener noreferrer">config</a>
+            <a href="https://huggingface.co/RayYoh/LaSSM/raw/main/scannet-lassm-spunet-v2-3/train.log" target="_blank" rel="noopener noreferrer">log</a>
+            <a href="https://huggingface.co/RayYoh/LaSSM/blob/main/scannet-lassm-spunet-v2-3/model/model_best.pth" target="_blank" rel="noopener noreferrer">model</a>
+          </span></td>
+        </tr>
+        <tr>
+          <td>ScanNet200 Val</td><td>29.3</td><td>39.2</td><td>44.5</td>
+          <td><span class="dl">
+            <a href="https://github.com/RayYoh/LaSSM/blob/main/configs/scannet200/insseg-lassm-minkunet-3.py" target="_blank" rel="noopener noreferrer">config</a>
+            <a href="https://huggingface.co/RayYoh/LaSSM/raw/main/scannet200-lassm-minkunet-3/train.log" target="_blank" rel="noopener noreferrer">log</a>
+            <a href="https://huggingface.co/RayYoh/LaSSM/blob/main/scannet200-lassm-minkunet-3/model/model_best.pth" target="_blank" rel="noopener noreferrer">model</a>
+          </span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure class="reveal">
+    <div class="frame"><img src="lassm_scannetpp.png" alt="ScanNet++ V2 hidden test leaderboard showing LaSSM at the first position." loading="lazy"></div>
+    <figcaption>
+      <b>ScanNet++ V2 leaderboard.</b> First place on the hidden test set (accessed 21 May 2025), and first place at
+      the <a href="https://kaldir.vc.in.tum.de/scannetpp/cvpr2025" target="_blank" rel="noopener noreferrer">CVPR 2025 ScanNet++ challenge</a>.
+    </figcaption>
+  </figure>
+</section>
+
+<!-- ================= QUALITATIVE ================= -->
+<section id="qualitative">
+  <div class="eyebrow reveal"><span class="num">04</span><h2>Qualitative Results</h2><span class="line"></span></div>
+
+  <figure class="reveal">
+    <div class="frame"><img src="assets/viz_scannetv2.webp" alt="Qualitative instance segmentation results on the ScanNet V2 validation set compared with ground truth." loading="lazy"></div>
+    <figcaption><b>ScanNet V2.</b> Instance predictions against ground truth on the validation set.</figcaption>
+  </figure>
+
+  <figure class="reveal">
+    <div class="frame"><img src="assets/viz_scannetpp.webp" alt="Qualitative instance segmentation results on large ScanNet++ V2 scenes." loading="lazy"></div>
+    <figcaption><b>ScanNet++ V2.</b> Large, cluttered scenes with long-tail categories &mdash; where the efficiency of the decoder matters most.</figcaption>
+  </figure>
+
+</section>
+
+<!-- ================= BIBTEX ================= -->
+<section id="bibtex">
+  <div class="eyebrow reveal"><span class="num">05</span><h2>Citation</h2><span class="line"></span></div>
+  <div class="bib reveal">
+    <button class="copy" id="copyBtn" type="button">copy</button>
+    <pre id="bibText">@article{yao2025lassm,
+  title={LaSSM: Efficient Semantic-Spatial Query Decoding via Local
+         Aggregation and State Space Models for 3D Instance Segmentation},
+  author={Yao, Lei and Wang, Yi and Cui, Yawen and Liu, Moyun and Chau, Lap-Pui},
+  journal={IEEE Transactions on Circuits and Systems for Video Technology},
+  year={2026},
+}</pre>
+  </div>
+</section>
+
+<footer>
+  <p>Built upon <a href="https://github.com/Pointcept/Pointcept" target="_blank" rel="noopener noreferrer">Pointcept</a>,
+     <a href="https://github.com/oneformer3d/oneformer3d" target="_blank" rel="noopener noreferrer">OneFormer3D</a> and
+     <a href="https://github.com/RayYoh/SGIFormer" target="_blank" rel="noopener noreferrer">SGIFormer</a>. Released under the MIT license.</p>
+  <p>Questions? Open an issue on <a href="https://github.com/RayYoh/LaSSM" target="_blank" rel="noopener noreferrer">GitHub</a>
+     or contact <a href="https://rayyoh.github.io/" target="_blank" rel="noopener noreferrer">Lei Yao</a>.</p>
+</footer>
+
+</div><!-- /wrap -->
+
+<button id="theme" aria-label="Toggle dark mode" title="Toggle dark mode">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
+<script>
+/* theme ---------------------------------------------------- */
+(function(){
+  var root=document.documentElement, btn=document.getElementById('theme'), icon=document.getElementById('themeIcon');
+  var MOON='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  var SUN='<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var stored=null; try{stored=localStorage.getItem('lassm-theme')}catch(e){}
+  var prefers=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  apply(stored||(prefers?'dark':'light'));
+  btn.addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    apply(next); try{localStorage.setItem('lassm-theme',next)}catch(e){}
+  });
+  function apply(t){root.setAttribute('data-theme',t); icon.innerHTML=t==='dark'?SUN:MOON;}
+})();
+
+/* scroll reveal -------------------------------------------- */
+(function(){
+  var els=document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)||window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    els.forEach(function(e){e.classList.add('in')}); return;
+  }
+  var io=new IntersectionObserver(function(rows){
+    rows.forEach(function(r){ if(r.isIntersecting){ r.target.classList.add('in'); io.unobserve(r.target);} });
+  },{rootMargin:'0px 0px -8% 0px',threshold:.08});
+  els.forEach(function(e){io.observe(e)});
+})();
+
+/* bibtex copy ---------------------------------------------- */
+(function(){
+  var btn=document.getElementById('copyBtn'), src=document.getElementById('bibText');
+  btn.addEventListener('click',function(){
+    var t=src.textContent;
+    function ok(){ btn.textContent='copied'; btn.classList.add('done');
+      setTimeout(function(){btn.textContent='copy'; btn.classList.remove('done')},1600); }
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(ok,fallback); }
+    else fallback();
+    function fallback(){
+      var a=document.createElement('textarea'); a.value=t; a.style.position='fixed'; a.style.opacity='0';
+      document.body.appendChild(a); a.select();
+      try{document.execCommand('copy'); ok();}catch(e){}
+      document.body.removeChild(a);
+    }
+  });
+})();
+</script>
+</body>
+</html>

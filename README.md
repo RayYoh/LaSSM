@@ -6,9 +6,10 @@ TCSVT 2026
 
 [Lei Yao](https://rayyoh.github.io/), [Yi Wang](https://wangyintu.github.io/), [Yawen Cui](https://scholar.google.com/citations?hl=zh-CN&user=Er0gOskAAAAJ&view_op=list_works&sortby=pubdate), [Moyun Liu](https://lmomoy.github.io/), [Lap-Pui Chau](https://www.eie.polyu.edu.hk/~lpchau/)
 
+<a href="https://rayyoh.github.io/LaSSM/"><img src="https://img.shields.io/badge/Project-Page-0d7a6f?style=flat&logo=googlechrome&logoColor=white"></a>
 <a href="https://arxiv.org/abs/2602.11007"><img src='https://img.shields.io/badge/arXiv-2602.11007-b31b1b.svg'></a>
 <a href="https://github.com/pre-commit/pre-commit"><img src="https://img.shields.io/badge/-Python_3.8-blue?logo=python&logoColor=white">
-<a href="https://huggingface.co/RayYoh/GaussianCross"><img src="https://img.shields.io/badge/Weights-grey?style=plastic&logo=huggingface&logoColor=yellow">
+<a href="https://huggingface.co/RayYoh/LaSSM"><img src="https://img.shields.io/badge/Weights-grey?style=plastic&logo=huggingface&logoColor=yellow">
 <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?labelColor=gray">
 
 If you have any questions, please consider open an issue or email me.

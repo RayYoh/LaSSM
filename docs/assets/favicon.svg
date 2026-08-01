@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7.5" fill="#0d7a6f"/>
+
+  <!-- dense superpoints / point cloud -->
+  <g fill="#ffffff" opacity=".42">
+    <circle cx="6.6" cy="9.2" r="1.15"/><circle cx="12.4" cy="6.6" r="1.15"/>
+    <circle cx="19.6" cy="8.0" r="1.15"/><circle cx="25.4" cy="10.4" r="1.15"/>
+    <circle cx="6.2" cy="16.4" r="1.15"/><circle cx="25.8" cy="16.0" r="1.15"/>
+    <circle cx="7.4" cy="24.6" r="1.15"/><circle cx="14.2" cy="26.4" r="1.15"/>
+    <circle cx="21.0" cy="25.6" r="1.15"/><circle cx="26.2" cy="22.4" r="1.15"/>
+  </g>
+
+  <!-- SSM scan path over the selected queries -->
+  <path d="M10 21.4 L16 12.6 L22.4 18.4" fill="none" stroke="#ffffff" stroke-width="1.9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- selected queries; coral = ours -->
+  <circle cx="10" cy="21.4" r="3.0" fill="#ffffff"/>
+  <circle cx="22.4" cy="18.4" r="3.0" fill="#ffffff"/>
+  <circle cx="16" cy="12.6" r="3.6" fill="#e8543f"/>
+</svg>
